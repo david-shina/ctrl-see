@@ -1,27 +1,24 @@
-import pyttsx3
+from elevenlabs.client import ElevenLabs
+from elevenlabs import play
+from dotenv import load_dotenv
+import os
+import pydub
+load_dotenv()
 
-engine = pyttsx3.init()
+apiKey = os.getenv('ELEVENLABS_API_KEY')
 
-rate = engine.getProperty('rate')
-print(rate)
-engine.setProperty('rate', 125)
 
-volume = engine.getProperty('volume')
-print(volume)
-engine.setProperty('volume', 1.0)
+pydub.AudioSegment.converter = 'C:/path/to/ffmpeg/bin/ffmpeg.exe'
 
-voices = engine.getProperty('voices')
-#engine.setProperty('voice', voices[0].id) # Male Voice
-engine.setProperty('voice', voices[1].id)# Female Voice
+client = ElevenLabs(
+    api_key=apiKey
+)
 
-'''engine.say(
-    'Hello World!'
-    'My current speaking rate is '
-    'my Name is Arinde David'
-)'''
+audio = client.text_to_speech.convert(
+    text = 'My name is David',
+    voice_id="JBFqnCBsd6RMkjVDRZzb",
+    model_id="eleven_multilingual_v2",
+    output_format="mp3_44100_128",
+)
 
-dave = 'Help'
-
-engine.say(dave)
-engine.runAndWait()
-engine.stop()
+play(audio)

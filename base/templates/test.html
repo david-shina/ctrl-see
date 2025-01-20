@@ -31,3 +31,99 @@
     {%endif%}
     </button>
 </form>-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Synthesis Example</title>
+</head>
+<body>
+    <textarea rows="4" cols="50" placeholder="Type here..."></textarea>
+    <textarea rows="4" cols="50" placeholder="Type here..."></textarea>
+    <br>
+    <button id="startSpeech">Start Speech</button>
+    <button id="pauseSpeech">Pause Speech</button>
+    <button id="resumeSpeech">Resume Speech</button>
+    <br>
+    <label for="speechRate">Speech Rate:</label>
+    <input type="range" id="speechRate" min="0.5" max="2" step="0.1" value="1">
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const textareas = document.querySelectorAll('textarea');
+            const startButton = document.getElementById('startSpeech');
+            const pauseButton = document.getElementById('pauseSpeech');
+            const resumeButton = document.getElementById('resumeSpeech');
+            const rateControl = document.getElementById('speechRate');
+
+            let speechSynthesis = window.speechSynthesis;
+            let currentUtterance = null;
+
+            function stripHtmlTags(html) {
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+                return temp.textContent || temp.innerText || '';
+            }
+
+            function speakText(text){
+                //speechSynthesis.cancel();
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                currentUtterance.rate = rateControl.value;
+                speechSynthesis.speak(currentUtterance);
+            }
+
+            function readText() {
+                const textToRead = Array.from(textareas)
+                    .map(textarea => stripHtmlTags(textarea.value))
+                    .join(' ')
+                    .trim();
+
+                if (textToRead) {
+                    speakText(textToRead);
+                }
+            }
+
+            function handleTyping(event){
+                const textarea = event.target;
+                const cursorPosition = textarea.selectionStart;
+                const typedChar = textarea.value.charAt(cursorPosition - 1);
+
+                if (typedChar && typedChar !== ' '){
+                    speakText(typedChar);
+                }
+
+                if (typedChar === ' ' || /[,.!?]/.test(typedChar)) {
+                    const textBeforeCursor = textarea.value.substring(0, cursorPosition);
+                    const words = textBeforeCursor.trim().split(/\s+/);
+                    const lastWord = words[words.length - 1].replace(/[.,!?]$/, '');
+
+                    if (lastWord && lastWord !== ''){
+                        speakText(lastWord);
+                    }
+                }
+            }
+
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', handleTyping);
+            });
+
+            startButton.addEventListener('click', readText);
+            pauseButton.addEventListener('click', () => {
+                speechSynthesis.pause();
+            });
+
+            resumeButton.addEventListener('click', () => {
+                speechSynthesis.resume();
+            });
+
+            rateControl.addEventListener('change', () => {
+                if (currentUtterance) {
+                    currentUtterance.rate = rateControl.value;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

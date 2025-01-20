@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Editor with TTS</title>
+    {% load static %}
+
+    <!-- <script type="module" src="{% static 'django_ckeditor_5/src/ckeditor.js' %}"></script> -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.js"></script>
+    <!-- <script src="{% static 'django_ckeditor_5/src/ckeditor.js' %}"></script> -->
+    <!-- <script src="{% static 'django_ckeditor_5/dist/bundle.js' %}"></script>  -->
+    
+</head>
+<body>
+    <h1>Text Editor with Text-to-Speech</h1>
+    <textarea id="editor" name="editor"></textarea>
+
+    <script>
+
+        // import ClassicEditor from '@ckeditor/ckeditor5-editor-classic/src/classiceditor';
+        // Initialize CKEditor
+        ClassicEditor
+            .create(document.querySelector('#editor'))
+            // .then(editor => {
+            //     const editorElement = editor.editing.view.document;
+
+            //     // Listen for input events
+            //     editorElement.on('change:data', () => {
+            //         const text = editor.getData();
+            //         readText(text);
+            //     });
+
+            //     // Listen for keyup events to detect space
+            //     editorElement.on('keyup', (event) => {
+            //         if (event.key === ' ') {
+            //             const text = editor.getData();
+            //             const words = text.split(' ');
+            //             const lastWord = words[words.length - 2]; // Get the last word before the space
+            //             speak(lastWord);
+            //         }
+            //     });
+            // })
+            .catch(error => {
+                console.error(error);
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('textarea');
+    const startButton = document.getElementById('startSpeech');
+    const pauseButton = document.getElementById('pauseSpeech');
+    const resumeButton = document.getElementById('resumeSpeech');
+    const rateControl = document.getElementById('speechRate');
+
+    let speechSynthesis = window.speechSynthesis;
+    let currentUtterance = null;
+    let lastWord = '';
+
+    function stripHtmlTags(html) {
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        return temp.textContent || temp.innerText || '';
+    }
+
+    function speakText(text){
+        // Cancel any ongoing speech
+        speechSynthesis.cancel();
+
+        // Create a new utterance
+        currentUtterance = new SpeechSynthesisUtterance(text);
+
+        // Adjust speaking rate
+        currentUtterance.rate = rateControl.value;
+
+        // Speak the text
+        speechSynthesis.speak(currentUtterance);
+
+    }
+
+    function readText() {
+        // Combine text from all textareas, stripping HTML tags
+        const textToRead = Array.from(textareas)
+            .map(textarea => stripHtmlTags(textarea.value))
+            .join(' ')
+            .trim();
+
+        if (textToRead) {
+            speakText(textToRead);
+        }
+    }
+
+    function handleTyping(event){
+        const textarea = event.target;
+        const cursorPosition = textarea.selectionStart;
+
+        const typedChar = textarea.value.charAt(cursorPosition - 1);
+
+        if (typedChar && typedChar !== ' '){
+            speakText(typedChar);
+        }
+
+        if (typedChar === ' ' || /[,.!?]/.test(typedChar)) {
+            const textBeforeCursor = textarea.value.substring(0, cursorPosition);
+            const words = textBeforeCursor.trim().split(/\s+/);
+            const lastWord = words[words.length - 1].replace(/[.,!?]$/, '');
+
+            if (lastWord && lastWord !== ''){
+                speakText(lastWord);
+            }
+        }
+
+    }
+
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', handleTyping)
+    });
+
+    startButton.addEventListener('click', readText);
+
+    pauseButton.addEventListener('click', () => {
+        speechSynthesis.pause();
+    });
+
+    resumeButton.addEventListener('click', () => {
+        speechSynthesis.resume();
+    });
+
+    rateControl.addEventListener('change', () => {
+        if (currentUtterance) {
+            // Update rate if text is currently being spoken
+            currentUtterance.rate = rateControl.value;
+        }
+    });
+    });
+    </script>
+
+    <div class="text-to-speech-controls">
+        <button id="startSpeech">Start Reading</button>
+        <button id="pauseSpeech">Pause</button>
+        <button id="resumeSpeech">Resume</button>
+    <label>
+        Speaking Rate: 
+        <input type="range" id="speechRate" min="0.5" max="2" step="0.1" value="1">
+    </label>
+</div>
+</body>
+</html>

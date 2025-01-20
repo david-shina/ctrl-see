@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{%load static%}
 
 {%block header%}
     {{form.media}}
@@ -10,11 +11,17 @@
 {%else%}
 <h1>Create Document</h1>
 {%endif%}
+<html>
+<head>
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.0/classic/ckeditor.js"></script>
+    <script src="{% static 'js/script.js' %}" defer></script>
+</head>
 <div class="document-edit-container">
-    <form method="post">
+    <form method="post" id="textEditor">
         {% csrf_token%}
 
         {{form.as_p}}
+       
         <button onclick="dispose()" id="cancelBtn" style="padding: 10px;">
             Cancel
         </button>
@@ -38,7 +45,7 @@
     </div>
 </div>
 
-<script>
+<!--<script>
 document.addEventListener('DOMContentLoaded', function() {
     const textareas = document.querySelectorAll('textarea');
     const startButton = document.getElementById('startSpeech');
@@ -48,11 +55,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let speechSynthesis = window.speechSynthesis;
     let currentUtterance = null;
+    let lastWord = '';
 
     function stripHtmlTags(html) {
         const temp = document.createElement('div');
         temp.innerHTML = html;
         return temp.textContent || temp.innerText || '';
+    }
+
+    function speakText(text){
+        // Cancel any ongoing speech
+        speechSynthesis.cancel();
+
+        // Create a new utterance
+        currentUtterance = new SpeechSynthesisUtterance(text);
+
+        // Adjust speaking rate
+        currentUtterance.rate = rateControl.value;
+
+        // Speak the text
+        speechSynthesis.speak(currentUtterance);
+
     }
 
     function readText() {
@@ -63,19 +86,35 @@ document.addEventListener('DOMContentLoaded', function() {
             .trim();
 
         if (textToRead) {
-            // Cancel any ongoing speech
-            speechSynthesis.cancel();
-
-            // Create a new utterance
-            currentUtterance = new SpeechSynthesisUtterance(textToRead);
-            
-            // Adjust speaking rate
-            currentUtterance.rate = rateControl.value;
-
-            // Speak the text
-            speechSynthesis.speak(currentUtterance);
+            speakText(textToRead);
         }
     }
+
+    function handleTyping(event){
+        const textarea = event.target;
+        const cursorPosition = textarea.selectionStart;
+
+        const typedChar = textarea.value.charAt(cursorPosition - 1);
+
+        if (typedChar && typedChar !== ' '){
+            speakText(typedChar);
+        }
+
+        if (typedChar === ' ' || /[,.!?]/.test(typedChar)) {
+            const textBeforeCursor = textarea.value.substring(0, cursorPosition);
+            const words = textBeforeCursor.trim().split(/\s+/);
+            const lastWord = words[words.length - 1].replace(/[.,!?]$/, '');
+
+            if (lastWord && lastWord !== ''){
+                speakText(lastWord);
+            }
+        }
+
+    }
+
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', handleTyping)
+    });
 
     startButton.addEventListener('click', readText);
 
@@ -94,5 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-</script>
+</script> -->
 {% endblock %}
+
+</html>

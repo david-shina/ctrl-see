@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect
 import pyttsx3
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
+from django.http import JsonResponse
 
 # Create your views here.
 
@@ -30,60 +31,10 @@ class TextDetailView(DetailView, FormView):
         context['form'] = TextDocumentForm()
         return context
     
-    
-'''class TextCreateView(CreateViewsd):
-    """Text create view"""
-
-    model = TextDocument
-    form_class = TextDocumentForm
-    template_name = 'textDocCreate.html'
-
-
-    def get_success_url(self):
-        return reverse_lazy("text-detail", kwargs={'pk':self.object.pk})
-
-
-    def get_object(self, queryset = None):
-        pk = self.kwargs.get('pk')
-        if pk:
-            try:
-                return TextDocument.objects.get(pk=pk)
-            except TextDocument.DoesNotExist:
-                return None
-            
-        return None
-        
-    
-    def form_valid(self, form):
-        pk = self.kwargs.get('pk')
-        if pk:
-            try:
-                existing_doc = TextDocument.objects.get(pk=pk)
-                form.instance = existing_doc
-            except TextDocument.DoesNotExist:
-                pass
-            
-        return super().form_valid(form)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        pk = self.kwargs.get('pk')
-        if pk:
-            try: 
-                textDocument = TextDocument.objects.get(pk=pk)
-                context['form'] = TextDocumentForm(instance=textDocument)
-            
-            except TextDocument.DoesNotExist:
-                pass
-
-        return context
-'''
-
 class TextCreateView(CreateView):
     model = TextDocument
     form_class = TextDocumentForm
-    template_name = 'textDocCreate.html'
+    template_name = 'editor1.html'
 
     def get_success_url(self):
         return reverse_lazy("text-detail", kwargs={'pk': self.object.pk})
@@ -136,3 +87,33 @@ def textToSpeech(request, pk):
         # Log the specific exception for debugging
         print(f"An error occurred: {e}")
         return HttpResponse(f'An error occurred: {e}', status=500)
+    
+
+@csrf_exempt
+def pronunceByChar(request, pk):
+    engine = pyttsx3.init()
+    # try:
+    #     document = get_object_or_404(TextDocument, pk=pk)
+    # except:
+    #     return 
+    if request.method == 'POST':
+        character = request.POST.get('character', '')
+
+        if character:
+            engine.say(character)
+            engine.runAndWait()
+        
+        if character == ' ':
+            word = request.session.get('current_word', '')
+            if word:
+                engine.say(word)
+                engine.runAndWait()
+
+            request.session['current_word'] = ''
+        
+    if character != ' ':
+        request.session['current_word'] = request.session.get('current_word', '') + character
+
+    return JsonResponse({'status' : 'success'})
+
+

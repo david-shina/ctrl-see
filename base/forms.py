@@ -10,6 +10,7 @@ class TextDocumentForm(forms.ModelForm):
         self.fields['text'].required = False
 
     class Meta:
+        #text = CKEditor5Widget()
         model = TextDocument
         fields = ('title', 'text')
         widgets = {

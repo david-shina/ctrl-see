@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from .views import TextDetailView, TextListView, TextCreateView, GetEditorView, textToSpeech, TextUpdateView
+from .views import TextDetailView, TextListView, TextCreateView, GetEditorView, textToSpeech, TextUpdateView, pronunceByChar
 
 
 urlpatterns = [
@@ -9,5 +9,6 @@ urlpatterns = [
     #path('getEditor/<int:pk>', GetEditorView.as_view(), name='get-editor'),
     path('editor/new/', TextCreateView.as_view(), name='text-create'),
     path('editor/<int:pk>/update/', TextUpdateView.as_view(), name='text-update'),
-    path('textToSpeech/<int:pk>', textToSpeech, name='speech')
+    path('textToSpeech/<int:pk>', textToSpeech, name='speech'),
+    path('pronunceChar/', pronunceByChar, name='pronunce')
 ]
